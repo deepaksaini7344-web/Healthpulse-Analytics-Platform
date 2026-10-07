@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HealthPulse Analytics | Wearable Intelligence & DBMS Platform</title>
+  <meta name="description" content="Advanced Health Analytics Platform processing wearable device telemetry, user activity patterns, comparative benchmarks, and inactivity detection." />
+  
+  <!-- Modern Typography: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- SQL.js WASM for client-side SQLite execution -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
+
+  <!-- Chart.js for smooth data visualizations -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="dark-theme">
+  <!-- Glow Backdrops -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+
+  <!-- Navigation Bar -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">HealthPulse <span class="badge-pro">DBMS Core</span></span>
+          <span class="brand-subtitle">Wearable Telemetry & Analytics Platform</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Live Engine Mode Indicator -->
+        <div class="engine-badge" id="engineBadge" title="Current Database Query Engine">
+          <span class="status-dot pulse"></span>
+          <span id="engineStatusText">SQLite WASM Engine</span>
+        </div>
+
+        <!-- Inactivity Alert Counter Button -->
+        <button class="nav-alert-btn" id="navAlertBtn" onclick="scrollToSection('inactiveSection')">
+          <span class="alert-icon">⚠️</span>
+          <span class="alert-label">Inactive Users:</span>
+          <span class="alert-pill" id="headerInactiveCount">0</span>
+        </button>
+
+        <!-- New Log / Sync Modal Trigger -->
+        <button class="btn btn-primary" id="openLogModalBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Sync Wearable Log
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <main class="dashboard-container">
+    
+    <!-- Top Bar: Overview & Quick Controls -->
+    <section class="dashboard-hero">
+      <div>
+        <h1 class="page-title">Wearable Activity & Health Intelligence</h1>
+        <p class="page-desc">Processing continuous biometric streams: step counts, metabolic expenditure, and sleep architecture.</p>
+      </div>
+      <div class="hero-actions">
+        <button class="btn btn-glass" id="toggleSqlInspectorBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 17l6-6-6-6M12 19h8"/></svg>
+          SQL Query Inspector
+        </button>
+        <button class="btn btn-glass" id="refreshDataBtn" title="Re-query DBMS">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+          Refresh Data
+        </button>
+      </div>
+    </section>
+
+    <!-- KPI Summary Metric Cards -->
+    <section class="kpi-grid">
+      <div class="kpi-card" id="kpiTotalSteps">
+        <div class="kpi-header">
+          <span class="kpi-title">Total Steps Tracked</span>
+          <div class="kpi-icon icon-emerald">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+          </div>
+        </div>
+        <div class="kpi-value" id="valTotalSteps">--</div>
+        <div class="kpi-footer text-emerald">
+          <span>Sum across all participant logs</span>
+        </div>
+      </div>
+
+      <div class="kpi-card" id="kpiAvgCalories">
+        <div class="kpi-header">
+          <span class="kpi-title">Average Burned Energy</span>
+          <div class="kpi-icon icon-amber">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+          </div>
+        </div>
+        <div class="kpi-value" id="valAvgCalories">--</div>
+        <div class="kpi-footer text-amber">
+          <span>kcal / tracked daily session</span>
+        </div>
+      </div>
+
+      <div class="kpi-card" id="kpiAvgSleep">
+        <div class="kpi-header">
+          <span class="kpi-title">Average Sleep Duration</span>
+          <div class="kpi-icon icon-violet">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+          </div>
+        </div>
+        <div class="kpi-value" id="valAvgSleep">--</div>
+        <div class="kpi-footer text-violet">
+          <span>hours recorded per night</span>
+        </div>
+      </div>
+
+      <div class="kpi-card" id="kpiDormantUsers">
+        <div class="kpi-header">
+          <span class="kpi-title">Inactive Users Flagged</span>
+          <div class="kpi-icon icon-rose">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+        </div>
+        <div class="kpi-value text-rose" id="valInactiveUsers">--</div>
+        <div class="kpi-footer text-rose">
+          <span>Requires re-engagement nudge</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Visual Analytics: Charts Section -->
+    <section class="charts-row">
+      <!-- Chart 1: Daily Activity Trends -->
+      <div class="glass-panel chart-panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">Daily Activity & Participation Patterns</h2>
+            <p class="panel-subtitle">Aggregated average steps walked & active user counts by date</p>
+          </div>
+          <span class="sql-chip" title="SQL: SELECT log_date, AVG(steps), COUNT(DISTINCT user_id)">GROUP BY log_date</span>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="dailyActivityChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Chart 2: Sleep vs Calories Correlation -->
+      <div class="glass-panel chart-panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">Sleep Architecture vs. Caloric Burn</h2>
+            <p class="panel-subtitle">Evaluating metabolic expenditure correlation with sleep hours</p>
+          </div>
+          <span class="sql-chip">Biometric Correlation</span>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="sleepCaloriesChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Comparative Analytics & Leaderboard Row -->
+    <section class="tables-row">
+      <!-- Most Active Users Leaderboard -->
+      <div class="glass-panel table-panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">🏆 Activity Champions (Leaderboard)</h2>
+            <p class="panel-subtitle">Users ranked by aggregate steps & calories burned</p>
+          </div>
+          <span class="sql-chip">ORDER BY total_steps DESC</span>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table" id="leaderboardTable">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>User</th>
+                <th>Total Steps</th>
+                <th>Calories</th>
+                <th>Daily Avg</th>
+                <th>Volume Bar</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboardBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- User Averages & Benchmarking -->
+      <div class="glass-panel table-panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">📊 User Performance Benchmarks</h2>
+            <p class="panel-subtitle">Lifetime averages per registered individual</p>
+          </div>
+          <span class="sql-chip">JOIN Users & HealthLogs</span>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table" id="averagesTable">
+            <thead>
+              <tr>
+                <th>User ID</th>
+                <th>Name</th>
+                <th>Age</th>
+                <th>Avg Steps</th>
+                <th>Avg Calories</th>
+                <th>Avg Sleep</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="averagesBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Inactive Users Watchdog Section -->
+    <section class="inactive-section glass-panel" id="inactiveSection">
+      <div class="panel-header panel-header-alert">
+        <div class="alert-title-box">
+          <div class="alert-glow-icon">⚠️</div>
+          <div>
+            <h2 class="panel-title text-rose-glow">Dormant & Inactive User Detection</h2>
+            <p class="panel-subtitle">Users with zero logs or no sync activity within threshold</p>
+          </div>
+        </div>
+        <div class="threshold-controls">
+          <label for="thresholdDaysSelect">Inactivity Threshold:</label>
+          <select id="thresholdDaysSelect" class="form-select">
+            <option value="7">Dormant 7+ Days</option>
+            <option value="14" selected>Dormant 14+ Days</option>
+            <option value="30">Dormant 30+ Days</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="data-table" id="inactiveTable">
+          <thead>
+            <tr>
+              <th>User ID</th>
+              <th>Name</th>
+              <th>Age</th>
+              <th>Last Synced Date</th>
+              <th>Dormancy Period</th>
+              <th>Status</th>
+              <th>Intervention</th>
+            </tr>
+          </thead>
+          <tbody id="inactiveBody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Live SQL Query Inspector Modal / Drawer -->
+  <div class="sql-inspector-drawer" id="sqlInspectorDrawer">
+    <div class="drawer-header">
+      <div class="drawer-title">
+        <span class="drawer-icon">⚡</span>
+        <h3>DBMS SQL Query Engine Inspector</h3>
+      </div>
+      <button class="btn-close" id="closeInspectorBtn">&times;</button>
+    </div>
+    <div class="drawer-body">
+      <p class="drawer-intro">Inspect the exact relational queries powering this platform, their execution timing, and relational join mechanics:</p>
+
+      <div class="sql-snippet-box">
+        <div class="snippet-header">
+          <span>Query 1: Daily Activity Aggregation</span>
+          <button class="btn-copy" onclick="copySql('sql1')">Copy</button>
+        </div>
+        <pre><code id="sql1">SELECT
+    log_date,
+    COUNT(DISTINCT user_id) AS active_users,
+    ROUND(AVG(steps), 2) AS avg_steps,
+    ROUND(AVG(calories), 2) AS avg_calories,
+    ROUND(AVG(sleep_hours), 2) AS avg_sleep
+FROM HealthLogs
+GROUP BY log_date
+ORDER BY log_date ASC;</code></pre>
+      </div>
+
+      <div class="sql-snippet-box">
+        <div class="snippet-header">
+          <span>Query 2: User Performance Averages</span>
+          <button class="btn-copy" onclick="copySql('sql2')">Copy</button>
+        </div>
+        <pre><code id="sql2">SELECT
+    u.user_id,
+    u.name,
+    u.age,
+    COUNT(h.log_id) AS total_logged_days,
+    ROUND(AVG(h.steps), 2) AS avg_steps,
+    ROUND(AVG(h.calories), 2) AS avg_calories,
+    ROUND(AVG(h.sleep_hours), 2) AS avg_sleep
+FROM Users u
+JOIN HealthLogs h ON u.user_id = h.user_id
+GROUP BY u.user_id, u.name, u.age
+ORDER BY avg_steps DESC;</code></pre>
+      </div>
+
+      <div class="sql-snippet-box">
+        <div class="snippet-header">
+          <span>Query 3: Activity Leaderboard (Most Active)</span>
+          <button class="btn-copy" onclick="copySql('sql3')">Copy</button>
+        </div>
+        <pre><code id="sql3">SELECT
+    u.user_id,
+    u.name,
+    COUNT(h.log_id) AS log_count,
+    SUM(h.steps) AS total_steps,
+    SUM(h.calories) AS total_calories,
+    ROUND(AVG(h.steps), 0) AS daily_avg_steps
+FROM Users u
+JOIN HealthLogs h ON u.user_id = h.user_id
+GROUP BY u.user_id, u.name
+ORDER BY total_steps DESC;</code></pre>
+      </div>
+
+      <div class="sql-snippet-box">
+        <div class="snippet-header">
+          <span>Query 4: Inactive Users Identification</span>
+          <button class="btn-copy" onclick="copySql('sql4')">Copy</button>
+        </div>
+        <pre><code id="sql4">SELECT
+    u.user_id,
+    u.name,
+    u.age,
+    MAX(h.log_date) AS last_active,
+    CASE 
+      WHEN MAX(h.log_date) IS NULL THEN 'Never Synced'
+      ELSE CAST(julianday((SELECT MAX(log_date) FROM HealthLogs)) - julianday(MAX(h.log_date)) AS INTEGER) || ' days ago'
+    END AS days_inactive
+FROM Users u
+LEFT JOIN HealthLogs h ON u.user_id = h.user_id
+GROUP BY u.user_id, u.name, u.age
+HAVING last_active IS NULL 
+   OR last_active < DATE((SELECT MAX(log_date) FROM HealthLogs), '-14 day')
+ORDER BY last_active ASC;</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Sync New Wearable Log -->
+  <div class="modal-overlay" id="syncModalOverlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">Sync Wearable Telemetry Log</h3>
+        <button class="btn-close" id="closeModalBtn">&times;</button>
+      </div>
+      <form id="wearableLogForm">
+        <div class="form-group">
+          <label for="formUserId">Select User:</label>
+          <select id="formUserId" class="form-control" required>
+            <!-- Dynamically populated with registered users -->
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="formLogDate">Log Date:</label>
+            <input type="date" id="formLogDate" class="form-control" required />
+          </div>
+          <div class="form-group">
+            <label for="formSteps">Steps Walked:</label>
+            <input type="number" id="formSteps" class="form-control" min="0" max="100000" placeholder="e.g. 8500" required />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="formCalories">Calories Burned (kcal):</label>
+            <input type="number" id="formCalories" class="form-control" min="0" max="10000" placeholder="e.g. 350" required />
+          </div>
+          <div class="form-group">
+            <label for="formSleep">Sleep Duration (hours):</label>
+            <input type="number" id="formSleep" class="form-control" step="0.1" min="0" max="24" placeholder="e.g. 7.5" required />
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-glass" id="cancelModalBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="submitLogBtn">
+            Sync Telemetry to DBMS
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: User Detail History Modal -->
+  <div class="modal-overlay" id="userHistoryModal">
+    <div class="modal-box modal-lg">
+      <div class="modal-header">
+        <h3 class="modal-title" id="historyModalTitle">User Health Logs</h3>
+        <button class="btn-close" id="closeHistoryModalBtn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Steps</th>
+                <th>Calories (kcal)</th>
+                <th>Sleep (hrs)</th>
+              </tr>
+            </thead>
+            <tbody id="userHistoryBody">
+              <!-- Logs populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- App Logic -->
+  <script src="app.js"></script>
+</body>
+</html>
