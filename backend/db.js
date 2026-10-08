@@ -11,11 +11,18 @@ let db;
 export async function initDB() {
   const SQL = await initSqlJs({
     locateFile: (file) => {
-      const localPath = path.resolve(__dirname, "node_modules/sql.js/dist", file);
-      if (fs.existsSync(localPath)) {
-        return localPath;
+      const candidates = [
+        path.resolve(__dirname, "node_modules/sql.js/dist", file),
+        path.resolve(__dirname, "../node_modules/sql.js/dist", file),
+        path.resolve(process.cwd(), "node_modules/sql.js/dist", file),
+        path.resolve(process.cwd(), "backend/node_modules/sql.js/dist", file),
+      ];
+      for (const p of candidates) {
+        if (fs.existsSync(p)) {
+          return p;
+        }
       }
-      return path.resolve(__dirname, "../node_modules/sql.js/dist", file);
+      return file;
     },
   });
 

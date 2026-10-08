@@ -1,0 +1,16 @@
+{
+  "name": "healthpulse-analytics-platform",
+  "version": "1.0.0",
+  "description": "HealthPulse Analytics Platform DBMS & Express Backend",
+  "type": "module",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "node --watch backend/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "sql.js": "^1.10.3"
+  }
+}

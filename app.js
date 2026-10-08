@@ -3,10 +3,21 @@
  * Seamless Dual-Mode: Uses Express Backend API when online, or embedded SQLite WASM.
  */
 
+// Determine API Base URL dynamically (supports Vercel production, Express on :5000, and dev server on :3000)
+function getApiBaseUrl() {
+  if (typeof window === 'undefined') return '/api';
+  // If running via python http.server on port 3000 or file: protocol, target local backend port 5000
+  if (window.location.port === '3000' || window.location.protocol === 'file:') {
+    return 'http://localhost:5000/api';
+  }
+  // If deployed on Vercel or served directly from Express (:5000), use relative /api
+  return '/api';
+}
+
 // Application State
 const state = {
   engineMode: 'WASM', // 'API' or 'WASM'
-  apiBaseUrl: 'http://localhost:5000/api',
+  apiBaseUrl: getApiBaseUrl(),
   db: null,
   users: [],
   charts: {
@@ -277,7 +288,8 @@ function updateEngineBadge() {
   const badge = document.getElementById('engineBadge');
   if (state.engineMode === 'API') {
     badgeText.textContent = 'Node/Express API Online';
-    badge.title = 'Connected to http://localhost:5000/api';
+    const displayEndpoint = state.apiBaseUrl === '/api' ? `${window.location.origin}/api` : state.apiBaseUrl;
+    badge.title = `Connected to ${displayEndpoint}`;
     badge.style.borderColor = 'rgba(16, 185, 129, 0.4)';
   } else {
     badgeText.textContent = 'SQLite WASM Core (Client)';
