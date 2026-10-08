@@ -1,6 +1,7 @@
 import initSqlJs from "sql.js";
 import path from "path";
 import { fileURLToPath } from "url";
+import fs from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -9,7 +10,13 @@ let db;
 
 export async function initDB() {
   const SQL = await initSqlJs({
-    locateFile: (file) => path.resolve(__dirname, "../node_modules/sql.js/dist", file),
+    locateFile: (file) => {
+      const localPath = path.resolve(__dirname, "node_modules/sql.js/dist", file);
+      if (fs.existsSync(localPath)) {
+        return localPath;
+      }
+      return path.resolve(__dirname, "../node_modules/sql.js/dist", file);
+    },
   });
 
   db = new SQL.Database();
