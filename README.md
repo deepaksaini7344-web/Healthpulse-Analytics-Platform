@@ -56,7 +56,7 @@ You can view the dashboard immediately by running Python's built-in HTTP server:
 ```bash
 python -m http.server 3000
 ```
-Open **[http://localhost:3000](http://localhost:3000)** in any web browser.
+Open **[http://localhost:5000](http://localhost:5000)** in any web browser.
 
 ### Option 2: Run with Node.js & Express API Backend
 If you have Node.js installed:
