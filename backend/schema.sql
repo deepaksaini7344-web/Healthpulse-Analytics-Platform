@@ -116,11 +116,11 @@ SELECT
     MAX(h.log_date) AS last_active_date,
     CASE 
         WHEN MAX(h.log_date) IS NULL THEN 'Never Logged'
-        ELSE CAST(julianday((SELECT MAX(log_date) FROM HealthLogs)) - julianday(MAX(h.log_date)) AS INTEGER) || ' days ago'
+        ELSE CAST(julianday('now') - julianday(MAX(h.log_date)) AS INTEGER) || ' days ago'
     END AS dormancy_duration
 FROM Users u
 LEFT JOIN HealthLogs h ON u.user_id = h.user_id
 GROUP BY u.user_id, u.name, u.age
 HAVING last_active_date IS NULL 
-    OR last_active_date < DATE((SELECT MAX(log_date) FROM HealthLogs), '-14 day')
+    OR last_active_date < DATE(('now'), '-14 day')
 ORDER BY last_active_date ASC;
